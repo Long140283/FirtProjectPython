@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
+import os
 
 try:
     from tkcalendar import DateEntry, Calendar
@@ -46,7 +47,11 @@ main_area = tk.Frame(root, bg="#ECF0F1")
 main_area.pack(expand=True, fill="both")
 
 # === Logo bệnh viện ===
-logo_path = "logo_longan.png"
+logo_path = "logo_longan.jpg"
+if not os.path.exists(logo_path):
+    # Thử đường dẫn tương đối từ thư mục cha
+    logo_path = os.path.join("cham_cong", "logo_longan.jpg")
+
 if PIL_AVAILABLE:
     try:
         img = Image.open(logo_path).resize((100, 100))
