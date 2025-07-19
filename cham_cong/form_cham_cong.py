@@ -25,8 +25,35 @@ current_user = {
 
 root = tk.Tk()
 root.title("🏥 Chấm Công - Bệnh Viện Đa Khoa Long An")
-root.state('zoomed')
+root.state('zoomed')  # Windows: full màn hình
+root.attributes('-fullscreen', True)  # Full màn hình trên mọi hệ điều hành
 
+# --- Fix: define open_create_user before using it ---
+def open_create_user():
+    top = tk.Toplevel(root)
+    top.title("Tạo User mới")
+    tk.Label(top, text="Tên đăng nhập:").grid(row=0, column=0, pady=5)
+    entry_username = tk.Entry(top)
+    entry_username.grid(row=0, column=1, pady=5)
+    tk.Label(top, text="Vai trò:").grid(row=1, column=0, pady=5)
+    combo_role = ttk.Combobox(top, values=["admin", "user"])
+    combo_role.current(1)
+    combo_role.grid(row=1, column=1, pady=5)
+    tk.Label(top, text="Khoa:").grid(row=2, column=0, pady=5)
+    entry_dept = tk.Entry(top)
+    entry_dept.grid(row=2, column=1, pady=5)
+
+    def save_user():
+        username = entry_username.get()
+        role = combo_role.get()
+        dept = entry_dept.get()
+        print(f"User mới: {username}, Role: {role}, Khoa: {dept}")
+        messagebox.showinfo("Thành công", "Đã tạo user mới!")
+        top.destroy()
+
+    tk.Button(top, text="Lưu", command=save_user).grid(row=3, column=0, columnspan=2, pady=10)
+
+# Đặt đoạn này trước khi tạo sidebar!
 sidebar = tk.Frame(root, bg="#34495E", width=220)
 sidebar.pack(side="left", fill="y")
 
@@ -35,10 +62,15 @@ tk.Label(sidebar, text="⚙️ MENU", bg="#34495E", fg="white", font=("Arial", 1
 def menu_action(name):
     print(f"👉 Đã chọn chức năng: {name}")
 
+# Python
 if current_user["role"] == "admin":
     for item in ["Tạo User", "Sửa User", "Xóa User", "Sửa phiếu chấm công"]:
-        tk.Button(sidebar, text=item, width=20, bg="#2C3E50", fg="white",
-                  command=lambda i=item: menu_action(i)).pack(pady=5)
+        if item == "Tạo User":
+            tk.Button(sidebar, text=item, width=20, bg="#2C3E50", fg="white",
+                      command=open_create_user).pack(pady=5)
+        else:
+            tk.Button(sidebar, text=item, width=20, bg="#2C3E50", fg="white",
+                      command=lambda i=item: menu_action(i)).pack(pady=5)
 
 tk.Button(sidebar, text="🔒 Đăng xuất", width=20, bg="#E74C3C", fg="white",
           command=root.quit).pack(pady=30)
