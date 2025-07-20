@@ -25,10 +25,18 @@ current_user = {
 
 root = tk.Tk()
 root.title("🏥 Chấm Công - Bệnh Viện Đa Khoa Long An")
-root.state('zoomed')  # Windows: full màn hình
-root.attributes('-fullscreen', True)  # Full màn hình trên mọi hệ điều hành
+root.state('zoomed')
+root.attributes('-fullscreen', True)
 
-# --- Fix: define open_create_user before using it ---
+# === Sidebar Menu ===
+sidebar = tk.Frame(root, bg="#34495E", width=220)
+sidebar.pack(side="left", fill="y")
+tk.Label(sidebar, text="⚙️ MENU", bg="#34495E", fg="white", font=("Arial", 14, "bold")).pack(pady=20)
+
+def menu_action(name):
+    print(f"👉 Đã chọn chức năng: {name}")
+    messagebox.showinfo("Chức năng", f"Bạn chọn: {name}")
+
 def open_create_user():
     top = tk.Toplevel(root)
     top.title("Tạo User mới")
@@ -53,62 +61,46 @@ def open_create_user():
 
     tk.Button(top, text="Lưu", command=save_user).grid(row=3, column=0, columnspan=2, pady=10)
 
-# Đặt đoạn này trước khi tạo sidebar!
-sidebar = tk.Frame(root, bg="#34495E", width=220)
-sidebar.pack(side="left", fill="y")
-
-tk.Label(sidebar, text="⚙️ MENU", bg="#34495E", fg="white", font=("Arial", 14, "bold")).pack(pady=20)
-
-def menu_action(name):
-    print(f"👉 Đã chọn chức năng: {name}")
-
-# Python
 if current_user["role"] == "admin":
     for item in ["Tạo User", "Sửa User", "Xóa User", "Sửa phiếu chấm công"]:
         if item == "Tạo User":
-            tk.Button(sidebar, text=item, width=20, bg="#2C3E50", fg="white",
-                      command=open_create_user).pack(pady=5)
+            tk.Button(sidebar, text=item, width=20, bg="#2C3E50", fg="white", command=open_create_user).pack(pady=5)
         else:
-            tk.Button(sidebar, text=item, width=20, bg="#2C3E50", fg="white",
-                      command=lambda i=item: menu_action(i)).pack(pady=5)
+            tk.Button(sidebar, text=item, width=20, bg="#2C3E50", fg="white", command=lambda i=item: menu_action(i)).pack(pady=5)
 
-tk.Button(sidebar, text="🔒 Đăng xuất", width=20, bg="#E74C3C", fg="white",
-          command=root.quit).pack(pady=30)
+tk.Button(sidebar, text="🔒 Đăng xuất", width=20, bg="#E74C3C", fg="white", command=root.quit).pack(pady=30)
 
+# === Main Area ===
 main_area = tk.Frame(root, bg="#ECF0F1")
 main_area.pack(expand=True, fill="both")
 
-# === Logo bệnh viện ===
-logo_path = "logo_longan.jpg"
-if not os.path.exists(logo_path):
-    # Thử đường dẫn tương đối từ thư mục cha
-    logo_path = os.path.join("cham_cong", "logo_longan.jpg")
-
-if PIL_AVAILABLE:
+# === Logo ===
+logo_path = os.path.join(os.path.dirname(__file__), "logo_longan.jpg")
+if os.path.isfile(logo_path) and PIL_AVAILABLE:
     try:
         img = Image.open(logo_path).resize((100, 100))
         logo_img = ImageTk.PhotoImage(img)
         logo_label = tk.Label(main_area, image=logo_img, bg="#ECF0F1")
-        logo_label.image = logo_img  # giữ tham chiếu
+        logo_label.image = logo_img
         logo_label.pack(pady=10)
     except Exception as e:
-        print("Lỗi khi tải logo:", e)
-        tk.Label(main_area, text="🏥 [Không tìm thấy logo]", font=("Arial", 16), bg="#ECF0F1").pack(pady=10)
+        print("❌ Lỗi ảnh:", e)
+        tk.Label(main_area, text="🏥 [Lỗi ảnh logo]", font=("Arial", 16), bg="#ECF0F1").pack(pady=10)
 else:
-    tk.Label(main_area, text="🏥 [Logo]", font=("Arial", 24), bg="#ECF0F1").pack(pady=10)
+    tk.Label(main_area, text="🏥 [Không tìm thấy logo]", font=("Arial", 16), bg="#ECF0F1").pack(pady=10)
 
+# === Tiêu đề + User Info ===
 tk.Label(main_area, text="PHIẾU CHẤM CÔNG", font=("Arial", 24, "bold"), bg="#ECF0F1", fg="#2C3E50").pack()
-tk.Label(main_area, text=f"Nhân viên: {current_user['username']} | Khoa: {current_user['department']}",
-         bg="#ECF0F1", font=("Arial", 12)).pack(pady=5)
+tk.Label(main_area, text=f"Nhân viên: {current_user['username']} | Khoa: {current_user['department']}", bg="#ECF0F1", font=("Arial", 12)).pack(pady=5)
 
+# === Form chấm công ===
 form_frame = tk.Frame(main_area, bg="#ECF0F1")
 form_frame.pack(pady=20)
 
 tk.Label(form_frame, text="Ngày làm việc:", bg="#ECF0F1", font=("Arial", 10)).grid(row=0, column=0, sticky="e", pady=5)
 
 if TKCALENDAR_AVAILABLE:
-    entry_ngay = DateEntry(form_frame, width=15, background='darkblue',
-                           foreground='white', borderwidth=2, date_pattern='yyyy-mm-dd')
+    entry_ngay = DateEntry(form_frame, width=15, background='darkblue', foreground='white', borderwidth=2, date_pattern='yyyy-mm-dd')
     entry_ngay.set_date(datetime.now())
 else:
     entry_ngay = tk.Entry(form_frame)
@@ -146,7 +138,6 @@ def gui_du_lieu():
     print("📤 Dữ liệu gửi:", du_lieu)
     tk.Label(main_area, text="✅ Đã ghi nhận!", fg="green", bg="#ECF0F1", font=("Arial", 10)).pack()
 
-tk.Button(main_area, text="📤 Gửi phiếu chấm công", command=gui_du_lieu,
-          bg="#2ECC71", fg="white", font=("Arial", 12)).pack(pady=10)
+tk.Button(main_area, text="📤 Gửi phiếu chấm công", command=gui_du_lieu, bg="#2ECC71", fg="white", font=("Arial", 12)).pack(pady=10)
 
 root.mainloop()
